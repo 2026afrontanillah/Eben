@@ -22,6 +22,26 @@ export function tienePermiso(rol, permiso) {
   return permisos.includes(permiso);
 }
 
+export function obtenerCelularUsuario(usuarioId, email, celularExistente) {
+  if (celularExistente && typeof celularExistente === 'string' && celularExistente.trim()) {
+    return celularExistente.trim();
+  }
+  try {
+    const venta = db.prepare(`
+      SELECT cliente_celular 
+      FROM ventas 
+      WHERE (cliente_email = ? OR vendedor_id = ?) 
+        AND cliente_celular IS NOT NULL 
+        AND cliente_celular != '' 
+      ORDER BY creada_en DESC 
+      LIMIT 1
+    `).get(email, usuarioId);
+    return venta?.cliente_celular || '';
+  } catch {
+    return '';
+  }
+}
+
 // Middleware de autenticación
 export function requireAuth(req, res, next) {
   const token = req.cookies?.[SESSION_COOKIE_NAME];
@@ -32,7 +52,7 @@ export function requireAuth(req, res, next) {
   const tokenHash = hashSessionToken(token);
   const now = new Date().toISOString();
   const sesion = db.prepare(`
-    SELECT s.id as sesion_id, u.id, u.nombre, u.email, u.rol, u.activo
+    SELECT s.id as sesion_id, u.id, u.nombre, u.email, u.rol, u.activo, u.celular
     FROM sesiones s
     JOIN usuarios u ON s.usuario_id = u.id
     WHERE s.token_hash = ? AND s.expira_en > ? AND u.activo = 1
@@ -48,6 +68,7 @@ export function requireAuth(req, res, next) {
     nombre: sesion.nombre,
     email: sesion.email,
     rol: sesion.rol,
+    celular: obtenerCelularUsuario(sesion.id, sesion.email, sesion.celular),
     permisos: PERMISOS_POR_ROL[sesion.rol] || [],
   };
   next();
@@ -102,6 +123,7 @@ apiRouter.post('/auth/login', (req, res) => {
       id: usuario.id,
       nombre: usuario.nombre,
       email: usuario.email,
+      celular: obtenerCelularUsuario(usuario.id, usuario.email, usuario.celular),
       rol: usuario.rol,
       permisos: PERMISOS_POR_ROL[usuario.rol] || [],
     },
@@ -230,6 +252,7 @@ apiRouter.post('/auth/google', async (req, res) => {
       id: usuario.id,
       nombre: usuario.nombre,
       email: usuario.email,
+      celular: obtenerCelularUsuario(usuario.id, usuario.email, usuario.celular),
       rol: usuario.rol,
       permisos: PERMISOS_POR_ROL[usuario.rol] || [],
     },
@@ -344,6 +367,7 @@ apiRouter.post('/auth/facebook', async (req, res) => {
       id: usuario.id,
       nombre: usuario.nombre,
       email: usuario.email,
+      celular: obtenerCelularUsuario(usuario.id, usuario.email, usuario.celular),
       rol: usuario.rol,
       permisos: PERMISOS_POR_ROL[usuario.rol] || [],
     },
@@ -369,7 +393,7 @@ apiRouter.get('/auth/me', (req, res) => {
   const tokenHash = hashSessionToken(token);
   const now = new Date().toISOString();
   const usuario = db.prepare(`
-    SELECT u.id, u.nombre, u.email, u.rol
+    SELECT u.id, u.nombre, u.email, u.rol, u.celular
     FROM sesiones s
     JOIN usuarios u ON s.usuario_id = u.id
     WHERE s.token_hash = ? AND s.expira_en > ? AND u.activo = 1
@@ -385,6 +409,7 @@ apiRouter.get('/auth/me', (req, res) => {
       id: usuario.id,
       nombre: usuario.nombre,
       email: usuario.email,
+      celular: obtenerCelularUsuario(usuario.id, usuario.email, usuario.celular),
       rol: usuario.rol,
       permisos: PERMISOS_POR_ROL[usuario.rol] || [],
     },
@@ -589,6 +614,13 @@ apiRouter.post('/ventas/general', requireAuth, requirePermiso('VENDER'), (req, r
     }
 
     db.exec('COMMIT;');
+
+    if (cliente.celular && typeof cliente.celular === 'string' && cliente.celular.trim()) {
+      try {
+        db.prepare('UPDATE usuarios SET celular = ? WHERE id = ?').run(cliente.celular.trim(), req.user.id);
+      } catch {}
+    }
+
     return res.json({ ventaId, codigo: ventaCodigo });
   } catch (err) {
     db.exec('ROLLBACK;');
@@ -703,6 +735,13 @@ apiRouter.post('/ventas/asientos', requireAuth, requirePermiso('VENDER'), (req, 
     }
 
     db.exec('COMMIT;');
+
+    if (cliente.celular && typeof cliente.celular === 'string' && cliente.celular.trim()) {
+      try {
+        db.prepare('UPDATE usuarios SET celular = ? WHERE id = ?').run(cliente.celular.trim(), req.user.id);
+      } catch {}
+    }
+
     return res.json({ ventaId, codigo: ventaCodigo });
   } catch (err) {
     db.exec('ROLLBACK;');

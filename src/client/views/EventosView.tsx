@@ -1,6 +1,7 @@
 import React, { useEffect, useState, type CSSProperties } from 'react';
 import { api } from '../api';
 import { useRouter } from '../router';
+import { useAuth } from '../AuthContext';
 import { formatearBolivianos } from '@/shared/format/moneda';
 import { Badge } from '@/shared/ui/Badge';
 import { Button } from '@/shared/ui/Button';
@@ -263,14 +264,24 @@ interface VentaGeneralModalProps {
 }
 
 function VentaGeneralModal({ eventoId, zona, onClose, onSuccess }: VentaGeneralModalProps) {
+  const { user } = useAuth();
   const [cantidad, setCantidad] = useState(1);
-  const [nombre, setNombre] = useState('');
-  const [celular, setCelular] = useState('');
-  const [email, setEmail] = useState('');
+  const [nombre, setNombre] = useState(() => user?.nombre || '');
+  const [celular, setCelular] = useState(() => user?.celular || localStorage.getItem('eben_user_celular') || '');
+  const [email, setEmail] = useState(() => user?.email || '');
   const [metodo, setMetodo] = useState('EFECTIVO');
   const [referencia, setReferencia] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setNombre((prev) => prev || user.nombre || '');
+      setEmail((prev) => prev || user.email || '');
+      const savedCel = user.celular || localStorage.getItem('eben_user_celular') || '';
+      setCelular((prev) => prev || savedCel);
+    }
+  }, [user]);
 
   const precioUnitario = zona.precioCentavos || 0;
   const maximo = Math.min(10, zona.disponibles);
@@ -304,6 +315,9 @@ function VentaGeneralModal({ eventoId, zona, onClose, onSuccess }: VentaGeneralM
           referencia: referencia.trim() || undefined,
         },
       });
+      if (celular.trim()) {
+        localStorage.setItem('eben_user_celular', celular.trim());
+      }
       onSuccess(res.ventaId);
     } catch (err: any) {
       setError(err.message || 'Error al procesar la venta');
@@ -324,6 +338,11 @@ function VentaGeneralModal({ eventoId, zona, onClose, onSuccess }: VentaGeneralM
             <p className="text-xs text-ink-muted">
               {formatearBolivianos(precioUnitario)} c/u · {zona.disponibles} disponibles
             </p>
+            {user && (
+              <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-brand/15 px-2 py-0.5 text-[11px] font-semibold text-brand">
+                ✓ Autocompletado con tu cuenta ({user.nombre})
+              </span>
+            )}
           </div>
           <button
             type="button"

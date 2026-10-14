@@ -5,6 +5,7 @@ export interface User {
   id: string;
   nombre: string;
   email: string;
+  celular?: string;
   rol: 'ADMIN' | 'VENDEDOR' | 'RELACIONADOR' | 'CONTROL';
   permisos: string[];
 }

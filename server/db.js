@@ -26,6 +26,7 @@ export function initDatabase() {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       rol TEXT NOT NULL,
+      celular TEXT,
       activo INTEGER NOT NULL DEFAULT 1,
       creado_en TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -154,6 +155,9 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec('ALTER TABLE entradas ADD COLUMN ultimo_intento_en TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE usuarios ADD COLUMN celular TEXT;');
   } catch {}
 
   seedIfEmpty();
