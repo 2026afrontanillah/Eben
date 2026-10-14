@@ -35,7 +35,14 @@ export function ZonaPlanoView({ zonaId }: ZonaPlanoViewProps) {
         api.getZonaAsientos(zonaId),
       ]);
       setZona(datosZona);
-      setMesas(datosAsientos.mesas);
+      const mesasNormalizadas = (datosAsientos.mesas || []).map((m: any) => ({
+        ...m,
+        sillas: (m.sillas || []).map((s: any) => ({
+          ...s,
+          vendida: Boolean(s.vendida || s.estado === 'VENDIDO'),
+        })),
+      }));
+      setMesas(mesasNormalizadas);
       setMesasPorFila(datosAsientos.mesasPorFila || 10);
     } catch (err: any) {
       setError(err.message || 'Error al cargar el plano');
@@ -147,7 +154,7 @@ function VentaAsientosModal({
 
   const toggleSilla = (numero: number) => {
     const silla = mesa.sillas.find((s) => s.numero === numero);
-    if (silla?.vendida) return;
+    if (!silla || silla.vendida || (silla as any).estado === 'VENDIDO') return;
 
     setSillasElegidas((prev) =>
       prev.includes(numero) ? prev.filter((s) => s !== numero) : [...prev, numero].sort((a, b) => a - b)

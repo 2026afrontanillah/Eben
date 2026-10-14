@@ -7,11 +7,16 @@ export interface EstadoAsiento {
 export interface SillaEstado {
   numero: number;
   vendida: boolean;
+  estado?: string;
 }
 
 export interface MesaEstado {
   numero: number;
   sillas: SillaEstado[];
+}
+
+export function esSillaVendida(silla: SillaEstado): boolean {
+  return Boolean(silla.vendida || silla.estado === 'VENDIDO');
 }
 
 export function agruparEnMesas(asientos: readonly EstadoAsiento[]): MesaEstado[] {
@@ -29,7 +34,7 @@ export function agruparEnMesas(asientos: readonly EstadoAsiento[]): MesaEstado[]
 }
 
 export function contarSillasLibres(mesa: MesaEstado): number {
-  return mesa.sillas.filter((silla) => !silla.vendida).length;
+  return mesa.sillas.filter((silla) => !esSillaVendida(silla)).length;
 }
 
 export function estaCompleta(mesa: MesaEstado): boolean {

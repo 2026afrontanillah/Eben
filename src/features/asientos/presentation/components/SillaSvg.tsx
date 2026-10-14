@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 
-import type { SillaEstado } from '../../domain/mesa';
+import { esSillaVendida, type SillaEstado } from '../../domain/mesa';
 import { COLORES_SILLA } from './colores-asientos';
 import type { PosicionSilla } from './mesa-geometria';
 
@@ -12,20 +12,21 @@ interface SillaSvgProps {
 }
 
 function obtenerColores(silla: SillaEstado, seleccionada: boolean) {
-  if (silla.vendida) {
+  if (esSillaVendida(silla)) {
     return COLORES_SILLA.vendida;
   }
   return seleccionada ? COLORES_SILLA.seleccionada : COLORES_SILLA.disponible;
 }
 
 function obtenerMarca(silla: SillaEstado, seleccionada: boolean): string {
-  if (silla.vendida) {
+  if (esSillaVendida(silla)) {
     return '×';
   }
   return seleccionada ? '✓' : String(silla.numero);
 }
 
 export function SillaSvg({ silla, posicion, seleccionada, onAlternar }: SillaSvgProps) {
+  const vendida = esSillaVendida(silla);
   const colores = obtenerColores(silla, seleccionada);
   const rect = (
     <rect
@@ -45,7 +46,7 @@ export function SillaSvg({ silla, posicion, seleccionada, onAlternar }: SillaSvg
   }
 
   const alternar = () => {
-    if (!silla.vendida) {
+    if (!vendida) {
       onAlternar(silla.numero);
     }
   };
@@ -59,14 +60,14 @@ export function SillaSvg({ silla, posicion, seleccionada, onAlternar }: SillaSvg
   return (
     <g
       role="button"
-      tabIndex={silla.vendida ? -1 : 0}
-      aria-label={`Silla ${silla.numero}${silla.vendida ? ', vendida' : ''}`}
+      tabIndex={vendida ? -1 : 0}
+      aria-label={`Silla ${silla.numero}${vendida ? ', vendida' : ''}`}
       aria-pressed={seleccionada}
-      aria-disabled={silla.vendida}
+      aria-disabled={vendida}
       onClick={alternar}
       onKeyDown={onKeyDown}
       className={
-        silla.vendida
+        vendida
           ? 'cursor-not-allowed opacity-60'
           : 'cursor-pointer transition hover:brightness-125 focus:outline-none focus-visible:brightness-125'
       }

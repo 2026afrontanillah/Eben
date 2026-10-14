@@ -476,9 +476,12 @@ apiRouter.get('/zonas/:zonaId/asientos', requireAuth, (req, res) => {
     if (!mesasMap.has(a.mesa)) {
       mesasMap.set(a.mesa, { numero: a.mesa, sillas: [] });
     }
+    const esVendida = a.estado === 'VENDIDO';
     mesasMap.get(a.mesa).sillas.push({
       numero: a.silla,
       estado: a.estado,
+      vendida: esVendida,
+      vendido: esVendida,
     });
   }
 

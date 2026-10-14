@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import type { SillaEstado } from '../../domain/mesa';
+import { esSillaVendida, type SillaEstado } from '../../domain/mesa';
 
 export function useSeleccionSillas(sillas: readonly SillaEstado[]) {
   const [elegidas, setElegidas] = useState<ReadonlySet<number>>(() => new Set());
 
   const vendidas = useMemo(
-    () => new Set(sillas.filter((silla) => silla.vendida).map((silla) => silla.numero)),
+    () => new Set(sillas.filter(esSillaVendida).map((silla) => silla.numero)),
     [sillas],
   );
 
