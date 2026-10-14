@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ADMIN
+  VENDEDOR
+  RELACIONADOR
+  CONTROL
+}
+
+enum TipoZona {
+  GENERAL
+  NUMERADA
+}
+
+enum EstadoAsiento {
+  DISPONIBLE
+  VENDIDO
+}
+
+enum EstadoVenta {
+  CONFIRMADA
+  ANULADA
+}
+
+enum EstadoEntrada {
+  VALIDA
+  USADA
+  ANULADA
+}
+
+enum MetodoPago {
+  EFECTIVO
+  QR
+  TRANSFERENCIA
+  TARJETA
+}
+
+model Usuario {
+  id                String    @id @default(uuid()) @db.Uuid
+  nombre            String
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  rol               Rol
+  activo            Boolean   @default(true)
+  creadoEn          DateTime  @default(now()) @map("creado_en")
+  sesiones          Sesion[]
+  ventas            Venta[]   @relation("VentasDelVendedor")
+  ventasAnuladas    Venta[]   @relation("VentasAnuladasPor")
+  pagosRegistrados  Pago[]
+  entradasValidadas Entrada[]
+
+  @@map("usuarios")
+}
+
+model Sesion {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  usuarioId String   @map("usuario_id") @db.Uuid
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime @map("expira_en")
+  creadaEn  DateTime @default(now()) @map("creada_en")
+
+  @@index([usuarioId])
+  @@map("sesiones")
+}
+
+model Evento {
+  id            String    @id @default(uuid()) @db.Uuid
+  slug          String    @unique
+  nombre        String
+  lugar         String?
+  fecha         DateTime?
+  activo        Boolean   @default(true)
+  planoColumnas String    @map("plano_columnas")
+  planoFilas    String    @map("plano_filas")
+  creadoEn      DateTime  @default(now()) @map("creado_en")
+  zonas         Zona[]
+  ventas        Venta[]
+
+  @@map("eventos")
+}
+
+model Zona {
+  id             String    @id @default(uuid()) @db.Uuid
+  eventoId       String    @map("evento_id") @db.Uuid
+  evento         Evento    @relation(fields: [eventoId], references: [id], onDelete: Restrict)
+  codigo         String
+  nombre         String
+  tipo           TipoZona
+  precioCentavos Int?      @map("precio_centavos")
+  capacidad      Int
+  disponibles    Int
+  habilitada     Boolean   @default(true)
+  areaPlano      String    @map("area_plano")
+  color          String
+  orden          Int
+  mesas          Int?
+  sillasPorMesa  Int?      @map("sillas_por_mesa")
+  mesasPorFila   Int?      @map("mesas_por_fila")
+  asientos       Asiento[]
+  ventas         Venta[]
+  entradas       Entrada[]
+
+  @@unique([eventoId, codigo])
+  @@map("zonas")
+}
+
+model Asiento {
+  id       String        @id @default(uuid()) @db.Uuid
+  zonaId   String        @map("zona_id") @db.Uuid
+  zona     Zona          @relation(fields: [zonaId], references: [id], onDelete: Restrict)
+  mesa     Int
+  silla    Int
+  estado   EstadoAsiento @default(DISPONIBLE)
+  entradas Entrada[]
+
+  @@unique([zonaId, mesa, silla])
+  @@index([zonaId, estado])
+  @@map("asientos")
+}
+
+model Venta {
+  id                     String      @id @default(uuid()) @db.Uuid
+  codigo                 String      @unique
+  eventoId               String      @map("evento_id") @db.Uuid
+  evento                 Evento      @relation(fields: [eventoId], references: [id], onDelete: Restrict)
+  zonaId                 String      @map("zona_id") @db.Uuid
+  zona                   Zona        @relation(fields: [zonaId], references: [id], onDelete: Restrict)
+  vendedorId             String      @map("vendedor_id") @db.Uuid
+  vendedor               Usuario     @relation("VentasDelVendedor", fields: [vendedorId], references: [id], onDelete: Restrict)
+  clienteNombre          String      @map("cliente_nombre")
+  clienteCelular         String      @map("cliente_celular")
+  clienteEmail           String?     @map("cliente_email")
+  cantidad               Int
+  precioUnitarioCentavos Int         @map("precio_unitario_centavos")
+  totalCentavos          Int         @map("total_centavos")
+  estado                 EstadoVenta @default(CONFIRMADA)
+  creadaEn               DateTime    @default(now()) @map("creada_en")
+  anuladaEn              DateTime?   @map("anulada_en")
+  anuladaPorId           String?     @map("anulada_por_id") @db.Uuid
+  anuladaPor             Usuario?    @relation("VentasAnuladasPor", fields: [anuladaPorId], references: [id], onDelete: Restrict)
+  motivoAnulacion        String?     @map("motivo_anulacion")
+  entradas               Entrada[]
+  pagos                  Pago[]
+
+  @@index([eventoId, creadaEn])
+  @@index([vendedorId, creadaEn])
+  @@map("ventas")
+}
+
+model Pago {
+  id              String     @id @default(uuid()) @db.Uuid
+  ventaId         String     @map("venta_id") @db.Uuid
+  venta           Venta      @relation(fields: [ventaId], references: [id], onDelete: Restrict)
+  metodo          MetodoPago
+  montoCentavos   Int        @map("monto_centavos")
+  referencia      String?
+  registradoPorId String     @map("registrado_por_id") @db.Uuid
+  registradoPor   Usuario    @relation(fields: [registradoPorId], references: [id], onDelete: Restrict)
+  registradoEn    DateTime   @default(now()) @map("registrado_en")
+
+  @@index([ventaId])
+  @@map("pagos")
+}
+
+model Entrada {
+  id            String        @id @default(uuid()) @db.Uuid
+  codigo        String        @unique
+  ventaId       String        @map("venta_id") @db.Uuid
+  venta         Venta         @relation(fields: [ventaId], references: [id], onDelete: Restrict)
+  zonaId        String        @map("zona_id") @db.Uuid
+  zona          Zona          @relation(fields: [zonaId], references: [id], onDelete: Restrict)
+  asientoId     String?       @map("asiento_id") @db.Uuid
+  asiento       Asiento?      @relation(fields: [asientoId], references: [id], onDelete: Restrict)
+  estado        EstadoEntrada @default(VALIDA)
+  usadaEn       DateTime?     @map("usada_en")
+  validadaPorId String?       @map("validada_por_id") @db.Uuid
+  validadaPor   Usuario?      @relation(fields: [validadaPorId], references: [id], onDelete: Restrict)
+  creadaEn      DateTime      @default(now()) @map("creada_en")
+
+  @@index([ventaId])
+  @@map("entradas")
+}

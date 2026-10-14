@@ -1,0 +1,27 @@
+# dependencias
+/node_modules
+
+# build frontend
+/dist
+
+# base de datos local
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+
+# next.js (legado)
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# cobertura y logs
+/coverage
+*.log
+.DS_Store
+
+# variables de entorno
+.env
+.env.local
+.env.*.local
+!.env.example

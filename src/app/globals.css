@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+
+/*
+ * Paleta de !eben Producciones: la marca es blanco sobre negro, así que la interfaz es oscura y
+ * las acciones principales usan blanco. Los colores vivos se reservan para las zonas del mapa.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-canvas: #050506;
+  --color-surface: #101014;
+  --color-surface-raised: #191920;
+  --color-surface-strong: #25252e;
+  --color-line: #2a2a33;
+  --color-line-strong: #3f3f4a;
+
+  --color-ink: #f5f5f6;
+  --color-ink-muted: #b4b4bd;
+  --color-ink-subtle: #81818c;
+
+  --color-brand: #ffffff;
+  --color-brand-ink: #050506;
+  --color-focus: #fb923c;
+
+  --color-success: #4ade80;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+}
+
+::selection {
+  @apply bg-brand text-brand-ink;
+}
+
+/* Superficie translúcida sobre el fondo fotográfico: legible sin ocultar del todo la imagen. */
+@utility panel {
+  border-width: 1px;
+  border-color: var(--color-line);
+  background-color: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+/* Animación del haz láser para el escáner de puerta */
+@keyframes laserSweep {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.2;
+  }
+}
+
+.animate-laser {
+  animation: laserSweep 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes countdownBar {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-countdown {
+  animation: countdownBar 2.2s linear forwards;
+}

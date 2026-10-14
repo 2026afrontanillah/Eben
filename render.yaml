@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: rela-entradas
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: QR_ENTRADAS_SECRET
+        generateValue: true
+      - key: SEED_ADMIN_EMAIL
+        value: admin@rela.bo
+      - key: SEED_ADMIN_PASSWORD
+        value: cambia-esta-contrasena
+    disk:
+      name: rela-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
