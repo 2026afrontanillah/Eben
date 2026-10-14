@@ -372,9 +372,12 @@ export function LoginView() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-ink-subtle">
-          Acceso exclusivo para el personal autorizado · !eben Producciones
-        </p>
+        <div className="mt-6 flex flex-col items-center gap-1 text-center text-xs text-ink-subtle">
+          <p>Acceso exclusivo para el personal autorizado · !eben Producciones</p>
+          <span className="text-[10px] font-semibold tracking-wider text-ink-muted/70 uppercase">
+            ver. 1.0
+          </span>
+        </div>
       </div>
     </div>
   );
