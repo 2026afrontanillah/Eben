@@ -8,7 +8,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "node --watch server/index.js",
+    "dev": "node --watch-path=server server/index.js",
     "start": "node server/index.js",
     "build": "vite build",
     "server": "node server/index.js",
