@@ -44,17 +44,6 @@ export const api = {
     return request('/api/auth/google/config');
   },
 
-  async loginWithFacebook(payload: { accessToken?: string; code?: string; redirectUri?: string; testEmail?: string; testName?: string }) {
-    return request('/api/auth/facebook', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-  },
-
-  async getFacebookConfig() {
-    return request('/api/auth/facebook/config');
-  },
-
   async logout() {
     return request('/api/auth/logout', { method: 'POST' });
   },

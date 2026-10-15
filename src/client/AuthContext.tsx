@@ -15,7 +15,6 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   loginWithGoogle: (payload: { credential?: string; testEmail?: string; testName?: string }) => Promise<void>;
-  loginWithFacebook: (payload: { accessToken?: string; code?: string; redirectUri?: string; testEmail?: string; testName?: string }) => Promise<void>;
   logout: () => Promise<void>;
   hasPermiso: (permiso: string) => boolean;
   refreshUser: () => Promise<void>;
@@ -26,7 +25,6 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: async () => {},
   loginWithGoogle: async () => {},
-  loginWithFacebook: async () => {},
   logout: async () => {},
   hasPermiso: () => false,
   refreshUser: async () => {},
@@ -65,11 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   };
 
-  const loginWithFacebook = async (payload: { accessToken?: string; code?: string; redirectUri?: string; testEmail?: string; testName?: string }) => {
-    const data = await api.loginWithFacebook(payload);
-    setUser(data.user);
-  };
-
   const logout = async () => {
     try {
       await api.logout();
@@ -84,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, loginWithFacebook, logout, hasPermiso, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, logout, hasPermiso, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
